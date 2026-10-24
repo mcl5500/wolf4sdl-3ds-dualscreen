@@ -39,6 +39,17 @@ Based on [Wolf4SDL](http://www.chaos-software.de.vu) and the initial 3DS port by
 
 ---
 
+## 📲 Direct 3DS Download (3dsDL / FBI)
+
+Scan either QR code with **3dsDL** or **FBI** (*Remote Install -> Scan QR Code*) on your 3DS to download and install directly over the air:
+
+| **Installable CIA** (HOME Menu) | **Standalone 3DSX** (Homebrew Launcher) |
+| :---: | :---: |
+| ![Installable CIA QR Code](assets/qrcode_cia.png) | ![Standalone 3DSX QR Code](assets/qrcode_3dsx.png) |
+| [Download .CIA](https://github.com/mcl5500/wolf4sdl-3ds-dualscreen/releases/latest/download/Wolfenstein-3D-DualScreen.cia) | [Download .3DSX](https://github.com/mcl5500/wolf4sdl-3ds-dualscreen/releases/latest/download/wolf4sdl-dualscreen.3dsx) |
+
+---
+
 ## 📂 Installation
 
 > [!IMPORTANT]
