@@ -1,6 +1,7 @@
 // WL_DRAW.C
 
 #include "wl_def.h"
+#include "automap.h"
 #pragma hdrstop
 
 #include "wl_cloudsky.h"
@@ -1628,13 +1629,16 @@ void    ThreeDRefresh (void)
     VL_UnlockSurface(screenBuffer);
     vbuf = NULL;
 
+    AutoMap_Update();
+    AutoMap_Draw();
+
 //
 // show screen and time last cycle
 //
 
     if (fizzlein)
     {
-        FizzleFade(screenBuffer, 0, 0, screenWidth, screenHeight, 20, false);
+        FizzleFade(screenBuffer, 0, 0, screenWidth, 240, 20, false);
         fizzlein = false;
 
         lasttimecount = GetTimeCount();          // don't make a big tic count

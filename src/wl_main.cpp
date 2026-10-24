@@ -1221,6 +1221,10 @@ static void InitGame()
         exit(1);
     }
     atexit(SDL_Quit);
+#ifdef __3DS__
+    irrstInit();
+    atexit(irrstExit);
+#endif
   printf("SDL INITIALISED");
     int numJoysticks = SDL_NumJoysticks();
     if(param_joystickindex && (param_joystickindex < -1 || param_joystickindex >= numJoysticks))
@@ -1365,14 +1369,9 @@ boolean SetViewSize (unsigned width, unsigned height)
     viewheight = height&~1;                 // must be even
     centerx = viewwidth/2-1;
     shootdelta = viewwidth/10;
-    if((unsigned) viewheight == screenHeight)
-        viewscreenx = viewscreeny = screenofs = 0;
-    else
-    {
-        viewscreenx = (screenWidth-viewwidth) / 2;
-        viewscreeny = (screenHeight-scaleFactor*STATUSLINES-viewheight)/2;
-        screenofs = viewscreeny*screenWidth+viewscreenx;
-    }
+    viewscreenx = (screenWidth-viewwidth) / 2;
+    viewscreeny = (240-viewheight)/2;
+    screenofs = viewscreeny*screenWidth+viewscreenx;
 
 //
 // calculate trace angles and projection constants
@@ -1385,44 +1384,15 @@ boolean SetViewSize (unsigned width, unsigned height)
 
 void ShowViewSize (int width)
 {
-    int oldwidth,oldheight;
-
-    oldwidth = viewwidth;
-    oldheight = viewheight;
-
-    if(width == 21)
-    {
-        viewwidth = screenWidth;
-        viewheight = screenHeight;
-        VWB_BarScaledCoord (0, 0, screenWidth, screenHeight, 0);
-    }
-    else if(width == 20)
-    {
-        viewwidth = screenWidth;
-        viewheight = screenHeight - scaleFactor*STATUSLINES;
-        DrawPlayBorder ();
-    }
-    else
-    {
-        viewwidth = width*16*screenWidth/320;
-        viewheight = (int) (width*16*HEIGHTRATIO*screenHeight/200);
-        DrawPlayBorder ();
-    }
-
-    viewwidth = oldwidth;
-    viewheight = oldheight;
+    viewwidth = screenWidth;
+    viewheight = 240;
 }
 
 
 void NewViewSize (int width)
 {
     viewsize = width;
-    if(viewsize == 21)
-        SetViewSize(screenWidth, screenHeight);
-    else if(viewsize == 20)
-        SetViewSize(screenWidth, screenHeight - scaleFactor * STATUSLINES);
-    else
-        SetViewSize(width*16*screenWidth/320, (unsigned) (width*16*HEIGHTRATIO*screenHeight/200));
+    SetViewSize(screenWidth, 240);
 }
 
 

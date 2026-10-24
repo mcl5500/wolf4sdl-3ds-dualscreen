@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include "wl_def.h"
+#include "automap.h"
 #include <SDL/SDL_mixer.h>
 #pragma hdrstop
 
@@ -634,6 +635,8 @@ void SetupGameLevel (void)
     word *map;
     word tile;
 
+    AutoMap_Reset ();
+
 
     if (!loadedgame)
     {
@@ -848,24 +851,10 @@ void DrawPlayBorderSides(void)
 void DrawStatusBorder (byte color)
 {
     int statusborderw = (screenWidth-scaleFactor*320)/2;
-
-    VWB_BarScaledCoord (0,0,screenWidth,screenHeight-scaleFactor*(STATUSLINES-3),color);
-    VWB_BarScaledCoord (0,screenHeight-scaleFactor*(STATUSLINES-3),
-        statusborderw+scaleFactor*8,scaleFactor*(STATUSLINES-4),color);
-    VWB_BarScaledCoord (0,screenHeight-scaleFactor*2,screenWidth,scaleFactor*2,color);
-    VWB_BarScaledCoord (screenWidth-statusborderw-scaleFactor*8, screenHeight-scaleFactor*(STATUSLINES-3),
-        statusborderw+scaleFactor*8,scaleFactor*(STATUSLINES-4),color);
-
-    VWB_BarScaledCoord (statusborderw+scaleFactor*9, screenHeight-scaleFactor*3,
-        scaleFactor*97, scaleFactor*1, color-1);
-    VWB_BarScaledCoord (statusborderw+scaleFactor*106, screenHeight-scaleFactor*3,
-        scaleFactor*161, scaleFactor*1, color-2);
-    VWB_BarScaledCoord (statusborderw+scaleFactor*267, screenHeight-scaleFactor*3,
-        scaleFactor*44, scaleFactor*1, color-3);
-    VWB_BarScaledCoord (screenWidth-statusborderw-scaleFactor*9, screenHeight-scaleFactor*(STATUSLINES-4),
-        scaleFactor*1, scaleFactor*20, color-2);
-    VWB_BarScaledCoord (screenWidth-statusborderw-scaleFactor*9, screenHeight-scaleFactor*(STATUSLINES/2-4),
-        scaleFactor*1, scaleFactor*14, color-3);
+    VWB_BarScaledCoord (0, screenHeight-scaleFactor*STATUSLINES,
+        statusborderw+scaleFactor*8, scaleFactor*STATUSLINES, color);
+    VWB_BarScaledCoord (screenWidth-statusborderw-scaleFactor*8, screenHeight-scaleFactor*STATUSLINES,
+        statusborderw+scaleFactor*8, scaleFactor*STATUSLINES, color);
 }
 
 
@@ -879,41 +868,12 @@ void DrawStatusBorder (byte color)
 
 void DrawPlayBorder (void)
 {
-	const int px = scaleFactor; // size of one "pixel"
-
-    if (bordercol != VIEWCOLOR)
-        DrawStatusBorder(bordercol);
-    else
-    {
-        const int statusborderw = (screenWidth-px*320)/2;
-        VWB_BarScaledCoord (0, screenHeight-px*STATUSLINES,
-            statusborderw+px*8, px*STATUSLINES, bordercol);
-        VWB_BarScaledCoord (screenWidth-statusborderw-px*8, screenHeight-px*STATUSLINES,
-            statusborderw+px*8, px*STATUSLINES, bordercol);
-    }
-
-    if((unsigned) viewheight == screenHeight) return;
-
-    VWB_BarScaledCoord (0,0,screenWidth,screenHeight-px*STATUSLINES,bordercol);
-
-    const int xl = screenWidth/2-viewwidth/2;
-    const int yl = (screenHeight-px*STATUSLINES-viewheight)/2;
-    VWB_BarScaledCoord (xl,yl,viewwidth,viewheight,0);
-
-    if(xl != 0)
-    {
-        // Paint game view border lines
-        VWB_BarScaledCoord(xl-px, yl-px, viewwidth+px, px, 0);                      // upper border
-        VWB_BarScaledCoord(xl, yl+viewheight, viewwidth+px, px, bordercol-2);       // lower border
-        VWB_BarScaledCoord(xl-px, yl-px, px, viewheight+px, 0);                     // left border
-        VWB_BarScaledCoord(xl+viewwidth, yl-px, px, viewheight+2*px, bordercol-2);  // right border
-        VWB_BarScaledCoord(xl-px, yl+viewheight, px, px, bordercol-3);              // lower left highlight
-    }
-    else
-    {
-        // Just paint a lower border line
-        VWB_BarScaledCoord(0, yl+viewheight, viewwidth, px, bordercol-2);       // lower border
-    }
+	const int px = scaleFactor;
+	const int statusborderw = (screenWidth-px*320)/2;
+	VWB_BarScaledCoord (0, screenHeight-px*STATUSLINES,
+		statusborderw+px*8, px*STATUSLINES, bordercol);
+	VWB_BarScaledCoord (screenWidth-statusborderw-px*8, screenHeight-px*STATUSLINES,
+		statusborderw+px*8, px*STATUSLINES, bordercol);
 }
 
 

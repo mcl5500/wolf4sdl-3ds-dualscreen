@@ -1034,6 +1034,7 @@ extern  int             lastgamemusicoffset;
 // current user input
 //
 extern  int         controlx,controly;              // range from -100 to 100
+extern  int         cstickx;
 extern  boolean     buttonstate[NUMBUTTONS];
 extern  objtype     objlist[MAXACTORS];
 extern  boolean     buttonheld[NUMBUTTONS];

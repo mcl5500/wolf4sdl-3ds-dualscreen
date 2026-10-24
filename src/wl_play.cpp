@@ -78,6 +78,7 @@ memptr demobuffer;
 // current user input
 //
 int controlx, controly;         // range from -100 to 100 per tic
+int cstickx = 0;
 boolean buttonstate[NUMBUTTONS];
 
 int lastgamemusicoffset = 0;
@@ -422,6 +423,7 @@ void PollControls (void)
 
     controlx = 0;
     controly = 0;
+    cstickx = 0;
     memcpy (buttonheld, buttonstate, sizeof (buttonstate));
     memset (buttonstate, 0, sizeof (buttonstate));
 
@@ -516,20 +518,31 @@ void PollControls (void)
         controlx += delta;
 
     circlePosition cpos;
-    int cx = 0, cy = 0;
-	hidCircleRead(&cpos);
-	if (abs(cpos.dx) > 32) 
-        cx = (cpos.dx) >> 1;
-	else
-        cx = 0;
-	
-    if (abs(cpos.dy) > 32) 
-        cy = (0-(cpos.dy)) >> 2;
-	else 
-        cy = 0;
+    hidCircleRead(&cpos);
+    if (abs(cpos.dx) > 24)
+    {
+        int mag_x = abs(cpos.dx) - 24;
+        int sign_x = (cpos.dx > 0) ? 1 : -1;
+        controlx += (sign_x * mag_x * 5) / (13 - mouseadjustment);
+    }
 
-    controlx += cx * 10/(13-mouseadjustment);
-	controly += cy * 20/(13-mouseadjustment);
+    if (abs(cpos.dy) > 24)
+    {
+        int mag_y = abs(cpos.dy) - 24;
+        int sign_y = (cpos.dy > 0) ? -1 : 1;
+        controly += (sign_y * mag_y * 10) / (13 - mouseadjustment);
+    }
+
+    // C-Stick (New 3DS) / Circle Pad Pro looking / turning support (20% smoother)
+    circlePosition cstick;
+    memset(&cstick, 0, sizeof(cstick));
+    irrstCstickRead(&cstick);
+    if (abs(cstick.dx) > 16)
+    {
+        int cs_mag = abs(cstick.dx) - 16;
+        int cs_sign = (cstick.dx > 0) ? 1 : -1;
+        cstickx = (cs_sign * cs_mag * 9) / (13 - mouseadjustment);
+    }
 
     //PollKeyboardMove ();
 

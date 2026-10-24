@@ -36,8 +36,28 @@
 ehthumbs.db
 Thumbs.db
 
-# Unnecessary project clutter #
-###############################
-*.layout
-*.depend
-settings.json
+# 3DS Build Artifacts #
+#######################
+build/
+*.3dsx
+*.cia
+*.cxi
+*.elf
+*.smdh
+*.map
+*.bin
+
+# Proprietary Game Data (Retail / Shareware) #
+#############################################
+*.wl1
+*.wl3
+*.wl6
+*.sod
+*.sdm
+*.n3d
+*.WL1
+*.WL3
+*.WL6
+*.SOD
+*.SDM
+*.N3D

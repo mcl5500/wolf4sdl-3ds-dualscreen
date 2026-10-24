@@ -221,6 +221,19 @@ void ControlMovement (objtype *ob)
     //
     // side to side move
     //
+    if (cstickx != 0)
+    {
+        anglefrac += cstickx;
+        angleunits = anglefrac / ANGLESCALE;
+        anglefrac -= angleunits * ANGLESCALE;
+        ob->angle -= angleunits;
+
+        if (ob->angle >= ANGLES)
+            ob->angle -= ANGLES;
+        if (ob->angle < 0)
+            ob->angle += ANGLES;
+    }
+
     if (buttonstate[bt_strafe])
     {
         //

@@ -19,7 +19,7 @@
 boolean fullscreen = true;
 boolean usedoublebuffering = true;
 unsigned screenWidth = 400;
-unsigned screenHeight = 240;
+unsigned screenHeight = 480;
 unsigned screenBits = 32;      // use "best" color depth according to libSDL  // ADDEDFIX 0
 
 SDL_Surface *screen = NULL;
@@ -92,7 +92,7 @@ void	VL_SetVGAPlaneMode (void)
         screenBits = vidInfo->vfmt->BitsPerPixel;
     }
 
-    screen = SDL_SetVideoMode(screenWidth, screenHeight, 32, SDL_TOPSCR | SDL_CONSOLEBOTTOM | SDL_DOUBLEBUF);
+    screen = SDL_SetVideoMode(screenWidth, screenHeight, 32, SDL_DUALSCR | SDL_DOUBLEBUF);
     if(!screen)
     {
         printf("Unable to set %ix%ix%i video mode: %s\n", screenWidth,
