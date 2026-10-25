@@ -45,8 +45,15 @@ if [ -n "$BANNERTOOL" ] && [ -f assets/icon.png ] && [ -f assets/banner.png ]; t
 fi
 
 if [ -n "$MAKEROM" ] && [ -f wolf4sdl.elf ] && [ -f build/cia/icon.bin ] && [ -f build/cia/banner.bin ]; then
-    echo "=== Packaging CIA with makerom ==="
-    $MAKEROM -f cia -o Wolfenstein-3D-DualScreen.cia -elf wolf4sdl.elf -rsf wolf.rsf -icon build/cia/icon.bin -banner build/cia/banner.bin -exefslogo -target t
+    VER_STR=$(grep "PORT_VERSION" src/version.h | cut -d'"' -f2 | sed 's/^v//')
+    VER_MAJOR=$(echo "$VER_STR" | cut -d'.' -f1)
+    VER_MINOR=$(echo "$VER_STR" | cut -d'.' -f2)
+    VER_MICRO=$(echo "$VER_STR" | cut -d'.' -f3)
+
+    echo "=== Packaging CIA with makerom (Version: $VER_MAJOR.$VER_MINOR.$VER_MICRO) ==="
+    $MAKEROM -f cia -o Wolfenstein-3D-DualScreen.cia -elf wolf4sdl.elf -rsf wolf.rsf \
+      -icon build/cia/icon.bin -banner build/cia/banner.bin -exefslogo -target t \
+      -major "$VER_MAJOR" -minor "$VER_MINOR" -micro "$VER_MICRO"
     echo "CIA created successfully: Wolfenstein-3D-DualScreen.cia"
 fi
 
