@@ -30,7 +30,13 @@ fi
 
 # Build SMDH and banner if bannertool is available
 if [ -n "$BANNERTOOL" ] && [ -f assets/icon.png ] && [ -f assets/banner.png ]; then
-    $BANNERTOOL makesmdh -s "Wolfenstein 3D" -l "Wolfenstein 3D DualScreen" -p "id Software" -i assets/icon.png -f allow3d -o build/cia/icon.bin
+    $BANNERTOOL makesmdh -s "Wolfenstein 3D" -l "Wolfenstein 3D DualScreen" -p "id Software" -i assets/icon.png -f visible,allow3d,recordusage -o build/cia/icon.bin
+    cp build/cia/icon.bin wolf4sdl.smdh
+    if command -v 3dsxtool >/dev/null 2>&1; then
+        3dsxtool wolf4sdl.elf wolf4sdl.3dsx --smdh=wolf4sdl.smdh --romfs=romfs
+    else
+        docker run --rm -v "$(pwd)":/workspace -w /workspace devkitpro/devkitarm:latest 3dsxtool wolf4sdl.elf wolf4sdl.3dsx --smdh=wolf4sdl.smdh --romfs=romfs
+    fi
     if [ -f assets/audio.wav ]; then
         $BANNERTOOL makebanner -i assets/banner.png -a assets/audio.wav -o build/cia/banner.bin
     else
