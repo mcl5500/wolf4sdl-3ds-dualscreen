@@ -522,26 +522,31 @@ void PollControls (void)
     if (abs(cpos.dx) > 24)
     {
         int mag_x = abs(cpos.dx) - 24;
+        if (mag_x > 126) mag_x = 126;
         int sign_x = (cpos.dx > 0) ? 1 : -1;
-        controlx += (sign_x * mag_x * 5) / (13 - mouseadjustment);
+        int max_turn = buttonstate[bt_run] ? 45 : 30;
+        controlx += sign_x * (mag_x * max_turn) / 126;
     }
 
     if (abs(cpos.dy) > 24)
     {
         int mag_y = abs(cpos.dy) - 24;
+        if (mag_y > 126) mag_y = 126;
         int sign_y = (cpos.dy > 0) ? -1 : 1;
-        controly += (sign_y * mag_y * 10) / (13 - mouseadjustment);
+        int max_move = buttonstate[bt_run] ? RUNMOVE : BASEMOVE;
+        controly += sign_y * (mag_y * max_move) / 126;
     }
 
-    // C-Stick (New 3DS) / Circle Pad Pro looking / turning support (20% smoother)
+    // C-Stick (New 3DS) / Circle Pad Pro looking / turning support
     circlePosition cstick;
     memset(&cstick, 0, sizeof(cstick));
     irrstCstickRead(&cstick);
     if (abs(cstick.dx) > 16)
     {
         int cs_mag = abs(cstick.dx) - 16;
+        if (cs_mag > 100) cs_mag = 100;
         int cs_sign = (cstick.dx > 0) ? 1 : -1;
-        cstickx = (cs_sign * cs_mag * 9) / (13 - mouseadjustment);
+        cstickx = cs_sign * (cs_mag * 30) / 100;
     }
 
     //PollKeyboardMove ();
