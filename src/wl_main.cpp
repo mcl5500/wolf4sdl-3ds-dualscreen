@@ -73,7 +73,8 @@ boolean startgame;
 boolean loadedgame;
 int     mouseadjustment;
 
-char    configdir[256] = "/3ds/wolf4sdl/wolf3d";
+char    configdir[256] = "/3ds/wolf4sdl";
+char    datadir[256] = "/3ds/wolf4sdl/";
 char    configname[13] = "config.";
 
 //
@@ -1409,19 +1410,49 @@ void NewViewSize (int width)
 
 void Quit (const char *errorStr, ...)
 {
-  printf(errorStr);
 #ifdef NOTYET
     byte *screen;
 #endif
-    char error[256];
+    char error[1024];
     if(errorStr != NULL)
     {
         va_list vlist;
         va_start(vlist, errorStr);
-        vsprintf(error, errorStr, vlist);
+        vsnprintf(error, sizeof(error), errorStr, vlist);
         va_end(vlist);
+        printf("%s\n", error);
     }
     else error[0] = 0;
+
+#ifdef __3DS__
+    if (error[0])
+    {
+        ShutdownId();
+        if (SDL_WasInit(0))
+            SDL_Quit();
+        gfxInitDefault();
+        consoleInit(GFX_TOP, NULL);
+        printf("\x1b[1;1H\x1b[31;1m========================================\x1b[0m\n");
+        printf("\x1b[33;1m       Wolfenstein 3D - Error\x1b[0m\n");
+        printf("\x1b[31;1m========================================\x1b[0m\n\n");
+        printf("%s\n\n", error);
+        printf("----------------------------------------\n");
+        printf("\x1b[32;1mPress START to exit to Home Menu.\x1b[0m\n");
+
+        while (aptMainLoop())
+        {
+            hidScanInput();
+            u32 kDown = hidKeysDown();
+            if (kDown & KEY_START)
+                break;
+            gfxFlushBuffers();
+            gfxSwapBuffers();
+            gspWaitForVBlank();
+        }
+        gfxExit();
+        exit(1);
+    }
+#endif
 
     if (!pictable)  // don't try to display the red box before it's loaded
     {

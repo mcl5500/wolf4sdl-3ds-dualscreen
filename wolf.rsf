@@ -9,7 +9,7 @@ RomFs:
 TitleInfo:
   Category                : Application
   UniqueId                : 0xf04d0
-  Version                 : 1089
+  Version                 : 1090
 
 Option:
   UseOnSD                 : true

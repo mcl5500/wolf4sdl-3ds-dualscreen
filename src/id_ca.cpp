@@ -86,14 +86,35 @@ int     numEpisodesMissing = 0;
 char extension[5]; // Need a string, not constant to change cache files
 char graphext[5];
 char audioext[5];
-static const char gheadname[] = DATADIR "vgahead.";
-static const char gfilename[] = DATADIR "vgagraph.";
-static const char gdictname[] = DATADIR "vgadict.";
-static const char mheadname[] = DATADIR "maphead.";
-static const char mfilename[] = DATADIR "maptemp.";
-static const char mfilecama[] = DATADIR "gamemaps.";
-static const char aheadname[] = DATADIR "audiohed.";
-static const char afilename[] = DATADIR "audiot.";
+
+int CA_OpenWithCaseFallback(const char *prefix, const char *ext, int flags, char *out_fname, size_t out_len)
+{
+    char upext[16];
+    strncpy(upext, ext, sizeof(upext) - 1);
+    upext[sizeof(upext) - 1] = 0;
+    for (int i = 0; upext[i]; i++) upext[i] = toupper((unsigned char)upext[i]);
+
+    // 1. datadir + prefix + ext (lowercase)
+    snprintf(out_fname, out_len, "%s%s%s", datadir, prefix, ext);
+    int h = open(out_fname, flags);
+    if (h != -1) return h;
+
+    // 2. datadir + prefix + uppercase ext
+    snprintf(out_fname, out_len, "%s%s%s", datadir, prefix, upext);
+    h = open(out_fname, flags);
+    if (h != -1) return h;
+
+    // 3. datadir + uppercase prefix + uppercase ext
+    char upprefix[64];
+    strncpy(upprefix, prefix, sizeof(upprefix) - 1);
+    upprefix[sizeof(upprefix) - 1] = 0;
+    for (int i = 0; upprefix[i]; i++) upprefix[i] = toupper((unsigned char)upprefix[i]);
+    snprintf(out_fname, out_len, "%s%s%s", datadir, upprefix, upext);
+    h = open(out_fname, flags);
+    if (h != -1) return h;
+
+    return -1;
+}
 
 void CA_CannotOpen(const char *string);
 
@@ -189,7 +210,26 @@ boolean CA_LoadFile (const char *filename, memptr *ptr)
 {
     int32_t size;
 
-    const int handle = open(filename, O_RDONLY | O_BINARY);
+    int handle = open(filename, O_RDONLY | O_BINARY);
+    if (handle == -1)
+    {
+        char altname[300];
+        strncpy(altname, filename, sizeof(altname) - 1);
+        altname[sizeof(altname) - 1] = 0;
+        char *dot = strrchr(altname, '.');
+        if (dot)
+        {
+            for (char *p = dot + 1; *p; p++) *p = toupper((unsigned char)*p);
+            handle = open(altname, O_RDONLY | O_BINARY);
+        }
+        if (handle == -1)
+        {
+            char *slash = strrchr(altname, '/');
+            char *start = slash ? slash + 1 : altname;
+            for (char *p = start; *p; p++) *p = toupper((unsigned char)*p);
+            handle = open(altname, O_RDONLY | O_BINARY);
+        }
+    }
     if (handle == -1)
         return false;
 
@@ -449,7 +489,7 @@ void CA_RLEWexpand (word *source, word *dest, int32_t length, word rlewtag)
 
 void CAL_SetupGrFile (void)
 {
-    char fname[13 + sizeof(DATADIR)];
+    char fname[300];
     int handle;
     byte *compseg;
 
@@ -464,10 +504,7 @@ void CAL_SetupGrFile (void)
 // load ???dict.ext (huffman dictionary for graphics files)
 //
 
-    strcpy(fname,gdictname);
-    strcat(fname,graphext);
-
-    handle = open(fname, O_RDONLY | O_BINARY);
+    handle = CA_OpenWithCaseFallback("vgadict.", graphext, O_RDONLY | O_BINARY, fname, sizeof(fname));
     if (handle == -1)
         CA_CannotOpen(fname);
 
@@ -475,10 +512,7 @@ void CAL_SetupGrFile (void)
     close(handle);
 
     // load the data offsets from ???head.ext
-    strcpy(fname,gheadname);
-    strcat(fname,graphext);
-
-    handle = open(fname, O_RDONLY | O_BINARY);
+    handle = CA_OpenWithCaseFallback("vgahead.", graphext, O_RDONLY | O_BINARY, fname, sizeof(fname));
     if (handle == -1)
         CA_CannotOpen(fname);
 
@@ -514,10 +548,7 @@ void CAL_SetupGrFile (void)
 //
 // Open the graphics file, leaving it open until the game is finished
 //
-    strcpy(fname,gfilename);
-    strcat(fname,graphext);
-
-    grhandle = open(fname, O_RDONLY | O_BINARY);
+    grhandle = CA_OpenWithCaseFallback("vgagraph.", graphext, O_RDONLY | O_BINARY, fname, sizeof(fname));
     if (grhandle == -1)
         CA_CannotOpen(fname);
 
@@ -552,13 +583,11 @@ void CAL_SetupMapFile (void)
     int     i;
     int handle;
     int32_t length,pos;
-    char fname[13 + sizeof(DATADIR)];
+    char fname[300];
 //
 // load maphead.ext (offsets and tileinfo for map file)
 //
-    strcpy(fname,mheadname);
-    strcat(fname,extension);
-    handle = open(fname, O_RDONLY | O_BINARY);
+    handle = CA_OpenWithCaseFallback("maphead.", extension, O_RDONLY | O_BINARY, fname, sizeof(fname));
     if (handle == -1)
         CA_CannotOpen(fname);
     length = NUMMAPS*4+2; // used to be "filelength(handle);"
@@ -573,17 +602,11 @@ void CAL_SetupMapFile (void)
 // open the data file
 //
 #ifdef CARMACIZED
-    strcpy(fname, mfilecama);
-    strcat(fname, extension);
-
-    maphandle = open(fname, O_RDONLY | O_BINARY);
+    maphandle = CA_OpenWithCaseFallback("gamemaps.", extension, O_RDONLY | O_BINARY, fname, sizeof(fname));
     if (maphandle == -1)
         CA_CannotOpen(fname);
 #else
-    strcpy(fname,mfilename);
-    strcat(fname,extension);
-
-    maphandle = open(fname, O_RDONLY | O_BINARY);
+    maphandle = CA_OpenWithCaseFallback("maptemp.", extension, O_RDONLY | O_BINARY, fname, sizeof(fname));
     if (maphandle == -1)
         CA_CannotOpen(fname);
 #endif
@@ -629,26 +652,30 @@ void CAL_SetupMapFile (void)
 
 void CAL_SetupAudioFile (void)
 {
-    char fname[13 + sizeof(DATADIR)];
+    char fname[300];
 
 //
 // load audiohed.ext (offsets for audio file)
 //
-    strcpy(fname,aheadname);
-    strcat(fname,audioext);
-
-    void* ptr;
-    if (!CA_LoadFile(fname, &ptr))
+    int ahed_h = CA_OpenWithCaseFallback("audiohed.", audioext, O_RDONLY | O_BINARY, fname, sizeof(fname));
+    if (ahed_h == -1)
         CA_CannotOpen(fname);
+    int32_t ahed_size = lseek(ahed_h, 0, SEEK_END);
+    lseek(ahed_h, 0, SEEK_SET);
+    void* ptr = malloc(ahed_size);
+    CHECKMALLOCRESULT(ptr);
+    if (read(ahed_h, ptr, ahed_size) != ahed_size)
+    {
+        close(ahed_h);
+        CA_CannotOpen(fname);
+    }
+    close(ahed_h);
     audiostarts = (int32_t*)ptr;
 
 //
 // open the data file
 //
-    strcpy(fname,afilename);
-    strcat(fname,audioext);
-
-    audiohandle = open(fname, O_RDONLY | O_BINARY);
+    audiohandle = CA_OpenWithCaseFallback("audiot.", audioext, O_RDONLY | O_BINARY, fname, sizeof(fname));
     if (audiohandle == -1)
         CA_CannotOpen(fname);
 }
@@ -1178,10 +1205,5 @@ void CA_CacheMap (int mapnum)
 
 void CA_CannotOpen(const char *string)
 {
-    char str[30];
-
-    strcpy(str,"Can't open ");
-    strcat(str,string);
-    strcat(str,"!\n");
-    Quit (str);
+    Quit("Cannot open file:\n  %s\n\nPlease ensure all Full Version Wolf3D files (.wl6)\nare present in /3ds/wolf4sdl/.\n\nNote: Shareware (.wl1) is not compatible\nwith this Full Version build.", string);
 }

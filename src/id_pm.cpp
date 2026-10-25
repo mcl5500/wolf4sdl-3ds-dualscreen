@@ -16,10 +16,24 @@ uint8_t **PMPages;
 
 void PM_Startup()
 {
-    char fname[13 + sizeof(DATADIR)] = DATADIR "vswap.";
-    strcat(fname,extension);
+    char fname[300];
+    snprintf(fname, sizeof(fname), "%svswap.%s", datadir, extension);
 
     FILE *file = fopen(fname,"rb");
+    if(!file)
+    {
+        char upext[16];
+        strncpy(upext, extension, sizeof(upext) - 1);
+        upext[sizeof(upext) - 1] = 0;
+        for (int i = 0; upext[i]; i++) upext[i] = toupper((unsigned char)upext[i]);
+        snprintf(fname, sizeof(fname), "%svswap.%s", datadir, upext);
+        file = fopen(fname, "rb");
+        if(!file)
+        {
+            snprintf(fname, sizeof(fname), "%sVSWAP.%s", datadir, upext);
+            file = fopen(fname, "rb");
+        }
+    }
     if(!file)
         CA_CannotOpen(fname);
 

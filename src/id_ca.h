@@ -35,6 +35,8 @@ extern  char  extension[5];
 extern  char  graphext[5];
 extern  char  audioext[5];
 
+int CA_OpenWithCaseFallback(const char *prefix, const char *ext, int flags, char *out_fname, size_t out_len);
+
 //===========================================================================
 
 boolean CA_LoadFile (const char *filename, memptr *ptr);

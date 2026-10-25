@@ -934,6 +934,7 @@ extern  unsigned screenofs;
 extern  boolean  startgame;
 extern  char     str[80];
 extern  char     configdir[256];
+extern  char     datadir[256];
 extern  char     configname[13];
 
 //

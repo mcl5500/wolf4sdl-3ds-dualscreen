@@ -3987,6 +3987,34 @@ ShootSnd (void)
 }
 
 
+static bool CheckFileWithCase(const char *dir, const char *prefix, const char *ext)
+{
+    char path[300];
+    struct stat st;
+
+    // 1. lowercase
+    snprintf(path, sizeof(path), "%s%s.%s", dir, prefix, ext);
+    if (stat(path, &st) == 0) return true;
+
+    // 2. uppercase extension
+    char upext[16];
+    strncpy(upext, ext, sizeof(upext) - 1);
+    upext[sizeof(upext) - 1] = 0;
+    for (int i = 0; upext[i]; i++) upext[i] = toupper((unsigned char)upext[i]);
+    snprintf(path, sizeof(path), "%s%s.%s", dir, prefix, upext);
+    if (stat(path, &st) == 0) return true;
+
+    // 3. uppercase prefix + uppercase extension
+    char upprefix[64];
+    strncpy(upprefix, prefix, sizeof(upprefix) - 1);
+    upprefix[sizeof(upprefix) - 1] = 0;
+    for (int i = 0; upprefix[i]; i++) upprefix[i] = toupper((unsigned char)upprefix[i]);
+    snprintf(path, sizeof(path), "%s%s.%s", dir, upprefix, upext);
+    if (stat(path, &st) == 0) return true;
+
+    return false;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //
 // CHECK FOR EPISODES
@@ -4071,35 +4099,90 @@ CheckForEpisodes (void)
         Quit ("NO WOLFENSTEIN 3-D DATA FILES to be found!");
 #else
 #ifndef SPEAR
-    if(!stat(DATADIR "vswap.wl6", &statbuf))
+    const char *candidateDirs[] = {
+        "/3ds/wolf4sdl/",
+        "/3ds/wolf4sdl/wolf3d/",
+        "./",
+        "./wolf3d/",
+        "romfs:/"
+    };
+    const size_t numCandidates = sizeof(candidateDirs) / sizeof(candidateDirs[0]);
+
+    bool found = false;
+    for (size_t i = 0; i < numCandidates; i++)
     {
-        strcpy (extension, "wl6");
-        NewEmenu[2].active =
-            NewEmenu[4].active =
-            NewEmenu[6].active =
-            NewEmenu[8].active =
-            NewEmenu[10].active =
-            EpisodeSelect[1] =
-            EpisodeSelect[2] = EpisodeSelect[3] = EpisodeSelect[4] = EpisodeSelect[5] = 1;
+        if (CheckFileWithCase(candidateDirs[i], "vswap", "wl6"))
+        {
+            strcpy(datadir, candidateDirs[i]);
+            strcpy(extension, "wl6");
+            NewEmenu[2].active =
+                NewEmenu[4].active =
+                NewEmenu[6].active =
+                NewEmenu[8].active =
+                NewEmenu[10].active =
+                EpisodeSelect[1] =
+                EpisodeSelect[2] = EpisodeSelect[3] = EpisodeSelect[4] = EpisodeSelect[5] = 1;
+            found = true;
+            break;
+        }
     }
-    else
+
+    if (!found)
     {
-        if(!stat(DATADIR "vswap.wl3", &statbuf))
+        for (size_t i = 0; i < numCandidates; i++)
         {
-            strcpy (extension, "wl3");
-            numEpisodesMissing = 3;
-            NewEmenu[2].active = NewEmenu[4].active = EpisodeSelect[1] = EpisodeSelect[2] = 1;
-        }
-        else
-        {
-            if(!stat(DATADIR "vswap.wl1", &statbuf))
+            if (CheckFileWithCase(candidateDirs[i], "vswap", "wl3"))
             {
-                strcpy (extension, "wl1");
-                numEpisodesMissing = 5;
+                strcpy(datadir, candidateDirs[i]);
+                strcpy(extension, "wl3");
+                numEpisodesMissing = 3;
+                NewEmenu[2].active = NewEmenu[4].active = EpisodeSelect[1] = EpisodeSelect[2] = 1;
+                found = true;
+                break;
             }
-            else
-                Quit ("NO WOLFENSTEIN 3-D DATA FILES to be found!");
         }
+    }
+
+    if (!found)
+    {
+        for (size_t i = 0; i < numCandidates; i++)
+        {
+            if (CheckFileWithCase(candidateDirs[i], "vswap", "wl1"))
+            {
+                strcpy(datadir, candidateDirs[i]);
+                strcpy(extension, "wl1");
+                numEpisodesMissing = 5;
+                found = true;
+                break;
+            }
+        }
+    }
+
+    if (!found)
+    {
+        Quit(
+            "No Wolfenstein 3D data files (.wl6) found!\n\n"
+            "Searched folders:\n"
+            "  /3ds/wolf4sdl/\n"
+            "  /3ds/wolf4sdl/wolf3d/\n\n"
+            "Please copy your original Full Version files:\n"
+            "  vswap.wl6, gamemaps.wl6, maphead.wl6,\n"
+            "  vgagraph.wl6, vgahead.wl6, vgadict.wl6,\n"
+            "  audiot.wl6, audiohed.wl6\n\n"
+            "Important Notes:\n"
+            "  - File extension must be .wl6\n"
+            "    (letter L, not number 1 or letter I)\n"
+            "  - Shareware (.wl1) files are not compatible\n"
+            "    with this Full Version build."
+        );
+    }
+
+    size_t dlen = strlen(datadir);
+    if (dlen > 0)
+    {
+        strcpy(configdir, datadir);
+        if (configdir[dlen - 1] == '/')
+            configdir[dlen - 1] = 0;
     }
 #endif
 #endif
