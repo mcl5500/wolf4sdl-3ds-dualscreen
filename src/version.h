@@ -1,6 +1,8 @@
 #ifndef _VERSION_H_
 #define _VERSION_H_
 
+#define PORT_VERSION "v1.4.0"
+
 #ifndef VERSIONALREADYCHOSEN              // used for batch compiling
 
 #ifndef DATADIR

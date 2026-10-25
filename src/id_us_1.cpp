@@ -22,6 +22,10 @@
 
 #include "wl_def.h"
 
+#ifdef __3DS__
+#include <3ds.h>
+#endif
+
 #pragma	hdrstop
 
 #if _MSC_VER == 1200            // Visual C++ 6
@@ -486,6 +490,44 @@ boolean
 US_LineInput(int x,int y,char *buf,const char *def,boolean escok,
 				int maxchars,int maxwidth)
 {
+#ifdef __3DS__
+	SwkbdState swkbd;
+	char myTypedString[256];
+	memset(myTypedString, 0, sizeof(myTypedString));
+
+	int maxLen = (maxchars > 0 && maxchars < 255) ? maxchars : 31;
+	swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, maxLen);
+	swkbdSetFeatures(&swkbd, SWKBD_DEFAULT_QWERTY | SWKBD_PREDICTIVE_INPUT | SWKBD_ALLOW_HOME);
+	swkbdSetValidation(&swkbd, SWKBD_ANYTHING, 0, 0);
+	swkbdSetButton(&swkbd, SWKBD_BUTTON_LEFT, "Cancel", false);
+	swkbdSetButton(&swkbd, SWKBD_BUTTON_RIGHT, "OK", true);
+	swkbdSetHintText(&swkbd, "Enter name...");
+	if (def && *def)
+	{
+		swkbdSetInitialText(&swkbd, def);
+	}
+
+	SwkbdButton button = swkbdInputText(&swkbd, myTypedString, sizeof(myTypedString));
+	if (button == SWKBD_BUTTON_CONFIRM || button == SWKBD_BUTTON_RIGHT)
+	{
+		strncpy(buf, myTypedString, maxLen);
+		buf[maxLen] = '\0';
+		return true;
+	}
+	else
+	{
+		if (!escok)
+		{
+			if (def && *def)
+			{
+				strncpy(buf, def, maxLen);
+				buf[maxLen] = '\0';
+			}
+			return true;
+		}
+		return false;
+	}
+#else
 	boolean		redraw,
 				cursorvis,cursormoved,
 				done,result, checkkey;
@@ -760,6 +802,7 @@ US_LineInput(int x,int y,char *buf,const char *def,boolean escok,
 
 	IN_ClearKeysDown();
 	return(result);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -79,6 +79,7 @@ memptr demobuffer;
 //
 int controlx, controly;         // range from -100 to 100 per tic
 int cstickx = 0;
+int turnx = 0;
 boolean buttonstate[NUMBUTTONS];
 
 int lastgamemusicoffset = 0;
@@ -424,6 +425,7 @@ void PollControls (void)
     controlx = 0;
     controly = 0;
     cstickx = 0;
+    turnx = 0;
     memcpy (buttonheld, buttonstate, sizeof (buttonstate));
     memset (buttonstate, 0, sizeof (buttonstate));
 
@@ -513,9 +515,9 @@ void PollControls (void)
     if((kDown & KEY_DDOWN))
         controly += delta;
     if((kDown & KEY_DLEFT))
-        controlx -= delta;
+        turnx -= delta;
     if((kDown & KEY_DRIGHT))
-        controlx += delta;
+        turnx += delta;
 
     circlePosition cpos;
     hidCircleRead(&cpos);
@@ -524,8 +526,8 @@ void PollControls (void)
         int mag_x = abs(cpos.dx) - 24;
         if (mag_x > 126) mag_x = 126;
         int sign_x = (cpos.dx > 0) ? 1 : -1;
-        int max_turn = buttonstate[bt_run] ? 45 : 30;
-        controlx += sign_x * (mag_x * max_turn) / 126;
+        int max_strafe = buttonstate[bt_run] ? RUNMOVE : BASEMOVE;
+        controlx += sign_x * (mag_x * max_strafe) / 126;
     }
 
     if (abs(cpos.dy) > 24)
@@ -546,7 +548,8 @@ void PollControls (void)
         int cs_mag = abs(cstick.dx) - 16;
         if (cs_mag > 100) cs_mag = 100;
         int cs_sign = (cstick.dx > 0) ? 1 : -1;
-        cstickx = cs_sign * (cs_mag * 30) / 100;
+        int max_look = buttonstate[bt_run] ? 45 : 30;
+        cstickx = cs_sign * (cs_mag * max_look) / 100;
     }
 
     //PollKeyboardMove ();

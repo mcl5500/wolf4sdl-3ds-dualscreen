@@ -57,7 +57,7 @@ LIBS	:=  -lSDL_mixer -lvorbisidec -lmikmod -lmad -logg -lSDL_ttf -lSDL_image -lS
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB) $(PORTLIBS)
+LIBDIRS	:= $(CURDIR)/libs $(CTRULIB) $(PORTLIBS)
 
 
 #---------------------------------------------------------------------------------

@@ -221,9 +221,16 @@ void ControlMovement (objtype *ob)
     //
     // side to side move
     //
-    if (cstickx != 0)
+    //
+    // side to side turn (C-Stick + D-Pad)
+    //
+    int total_turn = cstickx + turnx;
+    if (demoplayback)
+        total_turn += controlx;
+
+    if (total_turn != 0)
     {
-        anglefrac += cstickx;
+        anglefrac += total_turn;
         angleunits = anglefrac / ANGLESCALE;
         anglefrac -= angleunits * ANGLESCALE;
         ob->angle -= angleunits;
@@ -234,42 +241,25 @@ void ControlMovement (objtype *ob)
             ob->angle += ANGLES;
     }
 
-    if (buttonstate[bt_strafe])
+    //
+    // strafing (Circle Pad X)
+    //
+    if (!demoplayback)
     {
-        //
-        // strafing
-        //
-        //
         if (controlx > 0)
         {
             angle = ob->angle - ANGLES/4;
             if (angle < 0)
                 angle += ANGLES;
-            Thrust (angle,controlx*MOVESCALE);      // move to left
+            Thrust (angle, controlx * MOVESCALE);      // move to right
         }
         else if (controlx < 0)
         {
             angle = ob->angle + ANGLES/4;
             if (angle >= ANGLES)
                 angle -= ANGLES;
-            Thrust (angle,-controlx*MOVESCALE);     // move to right
+            Thrust (angle, -controlx * MOVESCALE);     // move to left
         }
-    }
-    else
-    {
-        //
-        // not strafing
-        //
-        anglefrac += controlx;
-        angleunits = anglefrac/ANGLESCALE;
-        anglefrac -= angleunits*ANGLESCALE;
-        ob->angle -= angleunits;
-
-        if (ob->angle >= ANGLES)
-            ob->angle -= ANGLES;
-        if (ob->angle < 0)
-            ob->angle += ANGLES;
-
     }
 
     //

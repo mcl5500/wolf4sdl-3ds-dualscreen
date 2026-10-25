@@ -1,6 +1,6 @@
 # Wolf4SDL 3DS DualScreen
 
-An enhanced port of **Wolfenstein 3D** for the **Nintendo 3DS** family of systems, featuring real-time **Dual-Screen Automap**, **New 3DS C-Stick analog looking**, and modern dual-analog controls.
+An enhanced, feature-packed port of **Wolfenstein 3D** for the **Nintendo 3DS** family of systems, featuring real-time **Dual-Screen Automap**, **Stereoscopic 3D**, **Native Touch Virtual Keyboard**, and modern **WASD / Dual-Stick controls**.
 
 Based on [Wolf4SDL](http://www.chaos-software.de.vu) and the initial 3DS port by hax0kartik.
 
@@ -8,13 +8,19 @@ Based on [Wolf4SDL](http://www.chaos-software.de.vu) and the initial 3DS port by
 
 ## 🌟 Key Features
 
+* **Stereoscopic 3D Display**:
+  * Full hardware support for the 3DS **3D Depth Slider** and green 3D LED.
+  * Native stereoscopic parallax rendering with optimized 1× VRAM usage (~1 MB vs previous >8 MB crashes).
+  * Seamless transitions between 2D (slider down) and full stereoscopic 3D (slider up).
 * **True Dual-Screen Experience**:
   * **Top Screen**: Clean 400×240 widescreen 3D maze with no HUD clutter.
   * **Bottom Screen**: Dedicated real-time **Live Automap** with line-of-sight Fog-of-War discovery, live player position and directional arrow, doors, pushwalls (secrets), enemy radars, and items.
-* **Modern Twin-Stick Controls**:
-  * **Circle Pad (Left)**: Calibrated analog movement and turning with smooth deadzone compensation.
-  * **C-Stick (Right)**: Dedicated analog camera look/rotation (*New 3DS / Circle Pad Pro*).
-  * **Circle-Strafing**: Hold `X` to strafe with the Circle Pad while maintaining full camera aim with the C-Stick.
+* **Modern Dual-Stick / WASD Controls**:
+  * **Circle Pad (Left)**: Full analog WASD movement — Up/Down to walk forward/back, Left/Right to **strafe** left/right.
+  * **C-Stick (Right)**: Dedicated analog camera look and rotation (*New 3DS / Circle Pad Pro*).
+  * **D-Pad**: Classic digital turning fallback.
+* **Native Virtual Touch Keyboard (`swkbd`)**:
+  * Official Nintendo 3DS touch screen keyboard applet integration for entering custom savegame names, High Score entries, and cheat/debug inputs.
 * **Available Formats**:
   * Standalone **`.3dsx`** for the Homebrew Launcher.
   * Installable **`.cia`** for the 3DS HOME Menu featuring custom 3D banner artwork and high-res icon.
@@ -26,12 +32,11 @@ Based on [Wolf4SDL](http://www.chaos-software.de.vu) and the initial 3DS port by
 
 | Button | Action |
 | :--- | :--- |
-| **Circle Pad** | Walk Forward / Backward, Turn Left / Right |
-| **C-Stick** *(New 3DS / CPP)* | Smooth Analog Camera Look (Turn Left / Right) |
+| **Circle Pad** | **WASD Movement** (Walk Forward / Backward, **Strafe** Left / Right) |
+| **C-Stick** *(New 3DS / CPP)* | **Camera Look** (Turn Left / Right) |
 | **D-Pad** | Classic Digital Movement & Turning |
 | **A / ZR** | Attack / Fire Weapon |
 | **B** | Use / Open Doors / Push Secret Walls |
-| **X** | Strafe *(Hold while moving Circle Pad to strafe)* |
 | **Y / ZL** | Run / Sprint |
 | **L / R** | Previous / Next Weapon |
 | **Start** | In-Game Menu / Pause |
@@ -46,7 +51,7 @@ Scan either QR code with **3dsDL** or **FBI** (*Remote Install -> Scan QR Code*)
 | **Installable CIA** (HOME Menu) | **Standalone 3DSX** (Homebrew Launcher) |
 | :---: | :---: |
 | ![Installable CIA QR Code](assets/qrcode_cia.png) | ![Standalone 3DSX QR Code](assets/qrcode_3dsx.png) |
-| [Download .CIA](https://github.com/mcl5500/wolf4sdl-3ds-dualscreen/releases/latest/download/Wolfenstein-3D-DualScreen.cia) | [Download .3DSX](https://github.com/mcl5500/wolf4sdl-3ds-dualscreen/releases/latest/download/wolf4sdl-dualscreen.3dsx) |
+| [Download .CIA (v1.4.0)](https://github.com/mcl5500/wolf4sdl-3ds-dualscreen/releases/download/v1.4.0/Wolfenstein-3D-DualScreen.cia) | [Download .3DSX (v1.4.0)](https://github.com/mcl5500/wolf4sdl-3ds-dualscreen/releases/download/v1.4.0/wolf4sdl.3dsx) |
 
 ---
 
