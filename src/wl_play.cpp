@@ -548,7 +548,8 @@ void PollControls (void)
         int cs_mag = abs(cstick.dx) - 16;
         if (cs_mag > 100) cs_mag = 100;
         int cs_sign = (cstick.dx > 0) ? 1 : -1;
-        int max_look = buttonstate[bt_run] ? 45 : 30;
+        int base_look = buttonstate[bt_run] ? 54 : 36;
+        int max_look = (base_look * (mouseadjustment + 5)) / 10;
         cstickx = cs_sign * (cs_mag * max_look) / 100;
     }
 

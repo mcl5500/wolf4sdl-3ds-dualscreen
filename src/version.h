@@ -1,7 +1,7 @@
 #ifndef _VERSION_H_
 #define _VERSION_H_
 
-#define PORT_VERSION "v1.4.3"
+#define PORT_VERSION "v1.4.4"
 
 #ifndef VERSIONALREADYCHOSEN              // used for batch compiling
 
