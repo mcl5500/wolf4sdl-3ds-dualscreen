@@ -55,19 +55,66 @@ Scan either QR code with **3dsDL** or **FBI** (*Remote Install -> Scan QR Code*)
 
 ---
 
-## 📂 Installation
+## 📂 Step-by-Step Installation & Data Setup
 
 > [!IMPORTANT]
-> **No copyrighted game files are included with this repository.** You must provide your own legally obtained Wolfenstein 3D data files (`.wl6` or `.wl1`).
+> **No copyrighted game files are included with this port.** You must provide your own legally obtained Wolfenstein 3D data files (`.wl6`).
 
-1. Download the latest `.cia` or `.3dsx` from the [Releases](https://github.com/) section.
-2. Place your Wolfenstein 3D data files in:
-   ```
-   sdmc:/3ds/wolf4sdl/
-   ```
-   *(Required files for full 6-episode registered version: `AUDIOHED.WL6`, `AUDIOT.WL6`, `CONFIG.WL6`, `GAMEMAPS.WL6`, `MAPHEAD.WL6`, `VGADICT.WL6`, `VGAGRAPH.WL6`, `VGAHEAD.WL6`)*
-3. **If using CIA**: Install `Wolfenstein-3D.cia` using **FBI** or **3dsDL**, then launch it directly from the HOME Menu.
-4. **If using 3DSX**: Place `wolf4sdl.3dsx` into `sdmc:/3ds/wolf4sdl/` and launch it via the Homebrew Launcher.
+### 1. Requirements
+* A Nintendo 3DS / 2DS family console running modern custom firmware (**Luma3DS**).
+* An official copy of the **Wolfenstein 3D Full Version (6 Episodes)**.
+  * Available on [Steam](https://store.steampowered.com/app/2270/Wolfenstein_3D/) or [GOG](https://www.gog.com/game/wolfenstein_3d).
+  * *Note: Shareware (`.wl1`) files are not compatible with this 6-episode registered build.*
+
+### 2. Locate Your Game Data Files
+If you own the game on Steam or GOG, you can find the data files here:
+* **Steam**: `<SteamLibrary>/steamapps/common/Wolfenstein 3D/base/`
+* **GOG**: `C:/GOG Games/Wolfenstein 3D/` (or your GOG installation folder)
+
+You need the following **8 files**:
+| File Name | Description |
+| :--- | :--- |
+| `vswap.wl6` | Wall textures, sprite graphics, and digitized sound effects |
+| `gamemaps.wl6` | Level maps for all 6 episodes |
+| `maphead.wl6` | Map header data and tile pointers |
+| `vgagraph.wl6` | VGA UI graphics, fonts, and menus |
+| `vgahead.wl6` | Graphics header offset table |
+| `vgadict.wl6` | Huffman dictionary for graphics compression |
+| `audiot.wl6` | Music and AdLib/Sound Blaster sound effects |
+| `audiohed.wl6` | Audio header offset table |
+
+> [!TIP]
+> **Check the file extension:**
+> * The extension is **`.wl6`** with a letter **L** (lowercase `l` or uppercase `L`), **not** the number `1` and **not** the capital letter `I`.
+> * Both lowercase (`vswap.wl6`) and uppercase (`VSWAP.WL6`) are supported.
+
+### 3. SD Card Folder Structure
+Insert your 3DS SD card into your PC (or use FTP / MicroSD Management) and place the files into `sdmc:/3ds/wolf4sdl/`:
+
+```
+SD Card Root
+└── 3ds/
+    └── wolf4sdl/
+        ├── audiohed.wl6
+        ├── audiot.wl6
+        ├── gamemaps.wl6
+        ├── maphead.wl6
+        ├── vgadict.wl6
+        ├── vgagraph.wl6
+        ├── vgahead.wl6
+        ├── vswap.wl6
+        └── wolf4sdl.3dsx    <-- (Optional: only needed if using Homebrew Launcher)
+```
+*(Files placed in `sdmc:/3ds/wolf4sdl/wolf3d/` are also automatically detected).*
+
+### 4. Install & Play
+* **CIA Version (Recommended)**:
+  1. Copy `Wolfenstein-3D-DualScreen.cia` to your SD card (e.g. `/cias/`).
+  2. Open **FBI** on your 3DS, navigate to `SD` -> `cias` -> `Wolfenstein-3D-DualScreen.cia` -> **Install CIA**.
+  3. Exit FBI and unwrap the new gift on your 3DS HOME Menu!
+* **3DSX Version (Homebrew Launcher)**:
+  1. Copy `wolf4sdl.3dsx` into `sdmc:/3ds/wolf4sdl/`.
+  2. Launch the **Homebrew Launcher** and start **Wolfenstein 3D DualScreen**.
 
 ---
 
