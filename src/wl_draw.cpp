@@ -2,6 +2,7 @@
 
 #include "wl_def.h"
 #include "automap.h"
+#include "3ds_video.h"
 #pragma hdrstop
 
 #include "wl_cloudsky.h"
@@ -257,6 +258,7 @@ int CalcHeight()
     fixed z = FixedMul(xintercept - viewx, viewcos)
         - FixedMul(yintercept - viewy, viewsin);
     if(z < MINDIST) z = MINDIST;
+    if(z < s_cur_min_wall_distance) s_cur_min_wall_distance = z;
     int height = heightnumerator / (z >> 8);
     if(height < min_wallheight) min_wallheight = height;
     return height;
@@ -912,9 +914,12 @@ void DrawScaleds (void)
         if (TransformTile (statptr->tilex,statptr->tiley,
             &visptr->viewx,&visptr->viewheight) && statptr->flags & FL_BONUS)
         {
-            GetBonus (statptr);
-            if(statptr->shapenum == -1)
-                continue;                                           // object has been taken
+            if (s_stereo_pass == 0)
+            {
+                GetBonus (statptr);
+                if(statptr->shapenum == -1)
+                    continue;                                           // object has been taken
+            }
         }
 
         if (!visptr->viewheight)
@@ -1053,11 +1058,11 @@ void DrawPlayerWeapon (void)
     if (gamestate.weapon != -1)
     {
         shapenum = weaponscale[gamestate.weapon]+gamestate.weaponframe;
-        SimpleScaleShape(viewwidth/2,shapenum,viewheight+1);
+        SimpleScaleShape(viewwidth/2 + s_weapon_stereo_shift,shapenum,viewheight+1);
     }
 
     if (demorecord || demoplayback)
-        SimpleScaleShape(viewwidth/2,SPR_DEMO,viewheight+1);
+        SimpleScaleShape(viewwidth/2 + s_weapon_stereo_shift,SPR_DEMO,viewheight+1);
 }
 
 
@@ -1555,6 +1560,52 @@ void CalcViewVariables()
 
 //==========================================================================
 
+void RenderScene(byte *destBuffer, unsigned destPitch, int stereo_pass, int weapon_shift)
+{
+    vbuf = destBuffer;
+    vbufPitch = destPitch;
+    s_stereo_pass = stereo_pass;
+    s_weapon_stereo_shift = weapon_shift;
+
+    VGAClearScreen ();
+#if defined(USE_FEATUREFLAGS) && defined(USE_STARSKY)
+    if(GetFeatureFlags() & FF_STARSKY)
+        DrawStarSky(vbuf, vbufPitch);
+#endif
+
+    WallRefresh ();
+
+#if defined(USE_FEATUREFLAGS) && defined(USE_PARALLAX)
+    if(GetFeatureFlags() & FF_PARALLAXSKY)
+        DrawParallax(vbuf, vbufPitch);
+#endif
+#if defined(USE_FEATUREFLAGS) && defined(USE_CLOUDSKY)
+    if(GetFeatureFlags() & FF_CLOUDSKY)
+        DrawClouds(vbuf, vbufPitch, min_wallheight);
+#endif
+#ifdef USE_FLOORCEILINGTEX
+    DrawFloorAndCeiling(vbuf, vbufPitch, min_wallheight);
+#endif
+
+    DrawScaleds();
+
+#if defined(USE_FEATUREFLAGS) && defined(USE_RAIN)
+    if(GetFeatureFlags() & FF_RAIN)
+        DrawRain(vbuf, vbufPitch);
+#endif
+#if defined(USE_FEATUREFLAGS) && defined(USE_SNOW)
+    if(GetFeatureFlags() & FF_SNOW)
+        DrawSnow(vbuf, vbufPitch);
+#endif
+
+    DrawPlayerWeapon ();
+
+    if(Keyboard[sc_Tab] && viewsize == 21 && gamestate.weapon != -1)
+        ShowActStatus();
+
+    vbuf = NULL;
+}
+
 /*
 ========================
 =
@@ -1576,92 +1627,122 @@ void    ThreeDRefresh (void)
          tilemap[player->tilex][player->tiley] & BIT_DOOR)
     spotvis[player->tilex][player->tiley] = 1;       // Detect all sprites over player fix
 
-    vbuf = VL_LockSurface(screenBuffer);
-    if(vbuf == NULL) return;
+    byte *lockBuf = VL_LockSurface(screenBuffer);
+    if(lockBuf == NULL) return;
 
-    vbuf += screenofs;
-    vbufPitch = bufferPitch;
+    byte *topBuffer = (byte *)screenBuffer->pixels + screenofs;
 
-    CalcViewVariables();
+    float slider = N3DS_GetSliderState();
 
-//
-// follow the walls from there to the right, drawing as we go
-//
-    VGAClearScreen ();
-#if defined(USE_FEATUREFLAGS) && defined(USE_STARSKY)
-    if(GetFeatureFlags() & FF_STARSKY)
-        DrawStarSky(vbuf, vbufPitch);
-#endif
+    fixed orig_px = player->x;
+    fixed orig_py = player->y;
 
-    WallRefresh ();
-
-#if defined(USE_FEATUREFLAGS) && defined(USE_PARALLAX)
-    if(GetFeatureFlags() & FF_PARALLAXSKY)
-        DrawParallax(vbuf, vbufPitch);
-#endif
-#if defined(USE_FEATUREFLAGS) && defined(USE_CLOUDSKY)
-    if(GetFeatureFlags() & FF_CLOUDSKY)
-        DrawClouds(vbuf, vbufPitch, min_wallheight);
-#endif
-#ifdef USE_FLOORCEILINGTEX
-    DrawFloorAndCeiling(vbuf, vbufPitch, min_wallheight);
-#endif
-
-//
-// draw all the scaled images
-//
-    DrawScaleds();                  // draw scaled stuff
-
-#if defined(USE_FEATUREFLAGS) && defined(USE_RAIN)
-    if(GetFeatureFlags() & FF_RAIN)
-        DrawRain(vbuf, vbufPitch);
-#endif
-#if defined(USE_FEATUREFLAGS) && defined(USE_SNOW)
-    if(GetFeatureFlags() & FF_SNOW)
-        DrawSnow(vbuf, vbufPitch);
-#endif
-
-    DrawPlayerWeapon ();    // draw player's hands
-
-    if(Keyboard[sc_Tab] && viewsize == 21 && gamestate.weapon != -1)
-        ShowActStatus();
-
-    VL_UnlockSurface(screenBuffer);
-    vbuf = NULL;
-
-    AutoMap_Update();
-    AutoMap_Draw();
-
-//
-// show screen and time last cycle
-//
-
-    if (fizzlein)
+    if (slider > 0.01f)
     {
-        FizzleFade(screenBuffer, 0, 0, screenWidth, 240, 20, false);
-        fizzlein = false;
+        // 3D stereoscopic mode with HIT convergence & near-wall disparity clamping
+        float max_shift_px = 5.0f;
+        float max_eye_units = 1200.0f; // Wolf3D fixed point (out of 65536)
 
-        lasttimecount = GetTimeCount();          // don't make a big tic count
+        // Near-wall disparity safety: dynamic clamping guarantees that crossed disparity
+        // never exceeds 8.0 pixels, completely eliminating diplopia on close walls!
+        if (s_min_wall_distance > 0 && s_min_wall_distance < 0x8000) {
+            float min_z = (float)s_min_wall_distance;
+            float safe_eye_units = (8.0f + max_shift_px) * min_z / (float)scale;
+            if (max_eye_units > safe_eye_units) {
+                max_eye_units = safe_eye_units;
+            }
+        }
+
+        int shift_px = (int)(max_shift_px * slider + 0.5f);
+        fixed eye_offset = (fixed)(max_eye_units * slider);
+
+        fixed dx = FixedMul(eye_offset, sintable[player->angle]);
+        fixed dy = FixedMul(eye_offset, costable[player->angle]);
+
+        // PASS 1: LEFT EYE (-dx, -dy)
+        player->x = orig_px - dx;
+        player->y = orig_py - dy;
+        CalcViewVariables();
+        RenderScene(topBuffer, bufferPitch, 0, +shift_px);
+
+        // PASS 2: RIGHT EYE (+dx, +dy)
+        player->x = orig_px + dx;
+        player->y = orig_py + dy;
+        CalcViewVariables();
+
+        if (!s_right_eye_buffer) {
+            s_right_eye_buffer = (byte *) malloc(400 * 240);
+            if (s_right_eye_buffer)
+                memset(s_right_eye_buffer, 0, 400 * 240);
+        }
+
+        if (s_right_eye_buffer) {
+            RenderScene(s_right_eye_buffer, 400, 1, -shift_px);
+        }
+
+        // Restore original player position
+        player->x = orig_px;
+        player->y = orig_py;
+        CalcViewVariables();
+
+        s_stereo_pass = 0;
+        s_weapon_stereo_shift = 0;
+
+        VL_UnlockSurface(screenBuffer);
+
+        AutoMap_Update();
+        AutoMap_Draw();
+
+        if (fizzlein)
+        {
+            FizzleFade(screenBuffer, 0, 0, screenWidth, 240, 20, false);
+            fizzlein = false;
+            lasttimecount = GetTimeCount();
+        }
+        else
+        {
+#ifdef __3DS__
+            N3DS_PresentStereo(topBuffer, s_right_eye_buffer, (byte *)screenBuffer->pixels, shift_px);
+#else
+            SDL_BlitSurface(screenBuffer, NULL, screen, NULL);
+            SDL_Flip(screen);
+#endif
+        }
     }
     else
     {
-        //fontnumber = 0;
-       // SETFONTCOLOR(7,127);
-        //PrintX=0; PrintY=220;
-        //VWB_Bar(0,220,45,10,bordercol);
-        //US_PrintSigned(fps);
-       // US_Print(" fps");
-        SDL_BlitSurface(screenBuffer, NULL, screen, NULL);
-        SDL_Flip(screen);
+        // 2D Mode (slider down)
+        s_stereo_pass = 0;
+        s_weapon_stereo_shift = 0;
+        CalcViewVariables();
+        RenderScene(topBuffer, bufferPitch, 0, 0);
+
+        VL_UnlockSurface(screenBuffer);
+
+        AutoMap_Update();
+        AutoMap_Draw();
+
+        if (fizzlein)
+        {
+            FizzleFade(screenBuffer, 0, 0, screenWidth, 240, 20, false);
+            fizzlein = false;
+            lasttimecount = GetTimeCount();
+        }
+        else
+        {
+#ifdef __3DS__
+            N3DS_PresentMono(topBuffer, (byte *)screenBuffer->pixels);
+#else
+            SDL_BlitSurface(screenBuffer, NULL, screen, NULL);
+            SDL_Flip(screen);
+#endif
+        }
     }
 
-    //fps_frames++;
-    //fps_time+=tics;
-
-    //if(fps_time>35)
-    //{
-      //  fps_time-=35;
-      //  fps=fps_frames<<1;
-      //  fps_frames=0;
-    //}
+    // Update minimum wall distance history for next frame
+    if (s_cur_min_wall_distance < 0x7fffffff)
+        s_min_wall_distance = s_cur_min_wall_distance;
+    else
+        s_min_wall_distance = 0x8000;
+    s_cur_min_wall_distance = 0x7fffffff;
 }

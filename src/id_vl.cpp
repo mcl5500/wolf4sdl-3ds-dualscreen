@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include "wl_def.h"
+#include "3ds_video.h"
 #pragma hdrstop
 
 // Uncomment the following line, if you get destination out of bounds
@@ -66,6 +67,9 @@ CASSERT(lengthof(gamepal) == 256)
 
 void	VL_Shutdown (void)
 {
+#ifdef __3DS__
+    N3DS_ShutdownVideo();
+#endif
 	//VL_SetTextMode ();
 }
 
@@ -102,6 +106,10 @@ void	VL_SetVGAPlaneMode (void)
     if((screen->flags & SDL_DOUBLEBUF) != SDL_DOUBLEBUF)
         usedoublebuffering = false;
     SDL_ShowCursor(SDL_DISABLE);
+
+#ifdef __3DS__
+    N3DS_InitVideo();
+#endif
 
     SDL_SetColors(screen, gamepal, 0, 256);
     memcpy(curpal, gamepal, sizeof(SDL_Color) * 256);
@@ -201,8 +209,13 @@ void VL_SetColor	(int color, int red, int green, int blue)
     else
     {
         SDL_SetPalette(curSurface, SDL_LOGPAL, &col, color, 1);
+#ifdef __3DS__
+        if (screenBuffer && screenBuffer->pixels)
+            N3DS_PresentMono((byte *)screenBuffer->pixels, (byte *)screenBuffer->pixels);
+#else
         SDL_BlitSurface(curSurface, NULL, screen, NULL);
         SDL_Flip(screen);
+#endif
     }
 }
 
@@ -245,8 +258,13 @@ void VL_SetPalette (SDL_Color *palette, bool forceupdate)
         SDL_SetPalette(curSurface, SDL_LOGPAL, palette, 0, 256);
         if(forceupdate)
         {
+#ifdef __3DS__
+            if (screenBuffer && screenBuffer->pixels)
+                N3DS_PresentMono((byte *)screenBuffer->pixels, (byte *)screenBuffer->pixels);
+#else
             SDL_BlitSurface(curSurface, NULL, screen, NULL);
             SDL_Flip(screen);
+#endif
         }
     }
 }
