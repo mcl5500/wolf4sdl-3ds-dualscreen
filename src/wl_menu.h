@@ -201,6 +201,8 @@ int  CP_EndGame(int);
 int  CP_CheckQuick(ScanCode scancode);
 int CustomControls(int);
 int MouseSensitivity(int);
+int CStickSensitivity(int);
+int CirclePadSensitivity(int);
 
 void CheckForEpisodes(void);
 

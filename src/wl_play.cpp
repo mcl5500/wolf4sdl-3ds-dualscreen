@@ -526,7 +526,8 @@ void PollControls (void)
         int mag_x = abs(cpos.dx) - 24;
         if (mag_x > 126) mag_x = 126;
         int sign_x = (cpos.dx > 0) ? 1 : -1;
-        int max_strafe = buttonstate[bt_run] ? RUNMOVE : BASEMOVE;
+        int base_strafe = buttonstate[bt_run] ? RUNMOVE : BASEMOVE;
+        int max_strafe = (base_strafe * (circlepadadjustment + 2)) / 7;
         controlx += sign_x * (mag_x * max_strafe) / 126;
     }
 
@@ -535,7 +536,8 @@ void PollControls (void)
         int mag_y = abs(cpos.dy) - 24;
         if (mag_y > 126) mag_y = 126;
         int sign_y = (cpos.dy > 0) ? -1 : 1;
-        int max_move = buttonstate[bt_run] ? RUNMOVE : BASEMOVE;
+        int base_move = buttonstate[bt_run] ? RUNMOVE : BASEMOVE;
+        int max_move = (base_move * (circlepadadjustment + 2)) / 7;
         controly += sign_y * (mag_y * max_move) / 126;
     }
 
@@ -549,7 +551,7 @@ void PollControls (void)
         if (cs_mag > 100) cs_mag = 100;
         int cs_sign = (cstick.dx > 0) ? 1 : -1;
         int base_look = buttonstate[bt_run] ? 54 : 36;
-        int max_look = (base_look * (mouseadjustment + 5)) / 10;
+        int max_look = (base_look * (mouseadjustment + 2)) / 7;
         cstickx = cs_sign * (cs_mag * max_look) / 100;
     }
 

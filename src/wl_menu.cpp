@@ -122,7 +122,7 @@ CP_itemtype SndMenu[] = {
 #ifdef JAPAN
 enum { CTL_MOUSEENABLE, CTL_JOYENABLE, CTL_JOY2BUTTONUNKNOWN, CTL_GAMEPADUNKONWN, CTL_MOUSESENS, CTL_CUSTOMIZE };
 #else
-enum { CTL_MOUSEENABLE, CTL_MOUSESENS, CTL_JOYENABLE, CTL_CUSTOMIZE };
+enum { CTL_CSTICKSENS, CTL_CIRCLEPADSENS, CTL_CUSTOMIZE };
 #endif
 
 CP_itemtype CtlMenu[] = {
@@ -134,9 +134,8 @@ CP_itemtype CtlMenu[] = {
     {0, "", MouseSensitivity},
     {1, "", CustomControls}
 #else
-    {0, STR_MOUSEEN, 0},
-    {0, STR_SENS, MouseSensitivity},
-    {0, STR_JOYEN, 0},
+    {1, "C-Stick Sensitivity", CStickSensitivity},
+    {1, "Schiebepad Sensitivity", CirclePadSensitivity},
     {1, STR_CUSTOM, CustomControls}
 #endif
 };
@@ -1856,23 +1855,8 @@ CP_Control (int)
         which = HandleMenu (&CtlItems, CtlMenu, NULL);
         switch (which)
         {
-            case CTL_MOUSEENABLE:
-                mouseenabled ^= 1;
-                if(IN_IsInputGrabbed())
-                    IN_CenterMouse();
-                DrawCtlScreen ();
-                CusItems.curpos = -1;
-                ShootSnd ();
-                break;
-
-            case CTL_JOYENABLE:
-                joystickenabled ^= 1;
-                DrawCtlScreen ();
-                CusItems.curpos = -1;
-                ShootSnd ();
-                break;
-
-            case CTL_MOUSESENS:
+            case CTL_CSTICKSENS:
+            case CTL_CIRCLEPADSENS:
             case CTL_CUSTOMIZE:
                 DrawCtlScreen ();
                 MenuFadeIn ();
@@ -1897,7 +1881,7 @@ CP_Control (int)
 // DRAW MOUSE SENSITIVITY SCREEN
 //
 void
-DrawMouseSens (void)
+DrawSensitivityBar (const char *title, int current_val)
 {
 #ifdef JAPAN
     CA_CacheScreen (S_MOUSESENSPIC);
@@ -1914,7 +1898,7 @@ DrawMouseSens (void)
     WindowW = 320;
     PrintY = 82;
     SETFONTCOLOR (READCOLOR, BKGDCOLOR);
-    US_CPrint (STR_MOUSEADJ);
+    US_CPrint (title);
 
     SETFONTCOLOR (TEXTCOLOR, BKGDCOLOR);
 #ifdef SPANISH
@@ -1934,27 +1918,32 @@ DrawMouseSens (void)
 
     VWB_Bar (60, 97, 200, 10, TEXTCOLOR);
     DrawOutline (60, 97, 200, 10, 0, HIGHLIGHT);
-    DrawOutline (60 + 20 * mouseadjustment, 97, 20, 10, 0, READCOLOR);
-    VWB_Bar (61 + 20 * mouseadjustment, 98, 19, 9, READHCOLOR);
+    DrawOutline (60 + 20 * current_val, 97, 20, 10, 0, READCOLOR);
+    VWB_Bar (61 + 20 * current_val, 98, 19, 9, READHCOLOR);
 
     VW_UpdateScreen ();
     MenuFadeIn ();
 }
 
+void
+DrawMouseSens (void)
+{
+    DrawSensitivityBar ("Adjust C-Stick Sensitivity", mouseadjustment);
+}
+
 
 ///////////////////////////
 //
-// ADJUST MOUSE SENSITIVITY
+// ADJUST SENSITIVITY SLIDERS
 //
 int
-MouseSensitivity (int)
+AdjustSensitivitySlider (const char *title, int *adjustment_var)
 {
     ControlInfo ci;
-    int exit = 0, oldMA;
+    int exit = 0;
+    int oldVal = *adjustment_var;
 
-
-    oldMA = mouseadjustment;
-    DrawMouseSens ();
+    DrawSensitivityBar (title, *adjustment_var);
     do
     {
         SDL_Delay(5);
@@ -1963,13 +1952,13 @@ MouseSensitivity (int)
         {
             case dir_North:
             case dir_West:
-                if (mouseadjustment)
+                if (*adjustment_var > 0)
                 {
-                    mouseadjustment--;
+                    (*adjustment_var)--;
                     VWB_Bar (60, 97, 200, 10, TEXTCOLOR);
                     DrawOutline (60, 97, 200, 10, 0, HIGHLIGHT);
-                    DrawOutline (60 + 20 * mouseadjustment, 97, 20, 10, 0, READCOLOR);
-                    VWB_Bar (61 + 20 * mouseadjustment, 98, 19, 9, READHCOLOR);
+                    DrawOutline (60 + 20 * (*adjustment_var), 97, 20, 10, 0, READCOLOR);
+                    VWB_Bar (61 + 20 * (*adjustment_var), 98, 19, 9, READHCOLOR);
                     VW_UpdateScreen ();
                     SD_PlaySound (MOVEGUN1SND);
                     TicDelay(20);
@@ -1978,13 +1967,13 @@ MouseSensitivity (int)
 
             case dir_South:
             case dir_East:
-                if (mouseadjustment < 9)
+                if (*adjustment_var < 9)
                 {
-                    mouseadjustment++;
+                    (*adjustment_var)++;
                     VWB_Bar (60, 97, 200, 10, TEXTCOLOR);
                     DrawOutline (60, 97, 200, 10, 0, HIGHLIGHT);
-                    DrawOutline (60 + 20 * mouseadjustment, 97, 20, 10, 0, READCOLOR);
-                    VWB_Bar (61 + 20 * mouseadjustment, 98, 19, 9, READHCOLOR);
+                    DrawOutline (60 + 20 * (*adjustment_var), 97, 20, 10, 0, READCOLOR);
+                    VWB_Bar (61 + 20 * (*adjustment_var), 98, 19, 9, READHCOLOR);
                     VW_UpdateScreen ();
                     SD_PlaySound (MOVEGUN1SND);
                     TicDelay(20);
@@ -2002,7 +1991,7 @@ MouseSensitivity (int)
 
     if (exit == 2)
     {
-        mouseadjustment = oldMA;
+        *adjustment_var = oldVal;
         SD_PlaySound (ESCPRESSEDSND);
     }
     else
@@ -2014,6 +2003,24 @@ MouseSensitivity (int)
     return 0;
 }
 
+int
+CStickSensitivity (int)
+{
+    return AdjustSensitivitySlider ("Adjust C-Stick Sensitivity", &mouseadjustment);
+}
+
+int
+CirclePadSensitivity (int)
+{
+    return AdjustSensitivitySlider ("Adjust Schiebepad Sensitivity", &circlepadadjustment);
+}
+
+int
+MouseSensitivity (int val)
+{
+    return CStickSensitivity (val);
+}
+
 
 ///////////////////////////
 //
@@ -2022,7 +2029,7 @@ MouseSensitivity (int)
 void
 DrawCtlScreen (void)
 {
-    int i, x, y;
+    int i;
 
 #ifdef JAPAN
     CA_CacheScreen (S_CONTROLPIC);
@@ -2037,32 +2044,11 @@ DrawCtlScreen (void)
     WindowW = 400;
     SETFONTCOLOR (TEXTCOLOR, BKGDCOLOR);
 
-    if (IN_JoyPresent())
-        CtlMenu[CTL_JOYENABLE].active = 1;
-
-    if (MousePresent)
-    {
-        CtlMenu[CTL_MOUSESENS].active = CtlMenu[CTL_MOUSEENABLE].active = 1;
-    }
-
-    CtlMenu[CTL_MOUSESENS].active = mouseenabled;
-
+    CtlMenu[CTL_CSTICKSENS].active = 1;
+    CtlMenu[CTL_CIRCLEPADSENS].active = 1;
+    CtlMenu[CTL_CUSTOMIZE].active = 1;
 
     DrawMenu (&CtlItems, CtlMenu);
-
-
-    x = CTL_X + CtlItems.indent - 24;
-    y = CTL_Y + 3;
-    if (mouseenabled)
-        VWB_DrawPic (x, y, C_SELECTEDPIC);
-    else
-        VWB_DrawPic (x, y, C_NOTSELECTEDPIC);
-
-    y = CTL_Y + 29;
-    if (joystickenabled)
-        VWB_DrawPic (x, y, C_SELECTEDPIC);
-    else
-        VWB_DrawPic (x, y, C_NOTSELECTEDPIC);
 
     //
     // PICK FIRST AVAILABLE SPOT

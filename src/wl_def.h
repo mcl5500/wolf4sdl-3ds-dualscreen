@@ -928,6 +928,7 @@ extern  fixed    scale;
 extern  int      dirangle[9];
 
 extern  int      mouseadjustment;
+extern  int      circlepadadjustment;
 extern  int      shootdelta;
 extern  unsigned screenofs;
 

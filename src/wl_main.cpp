@@ -72,6 +72,7 @@ void    Quit (const char *error,...);
 boolean startgame;
 boolean loadedgame;
 int     mouseadjustment;
+int     circlepadadjustment = 5;
 
 char    configdir[256] = "/3ds/wolf4sdl";
 char    datadir[256] = "/3ds/wolf4sdl/";
@@ -177,6 +178,8 @@ void ReadConfig(void)
 
         read(file,&viewsize,sizeof(viewsize));
         read(file,&mouseadjustment,sizeof(mouseadjustment));
+        if(read(file,&circlepadadjustment,sizeof(circlepadadjustment)) != sizeof(circlepadadjustment))
+            circlepadadjustment = 5;
 
         close(file);
 
@@ -202,6 +205,9 @@ void ReadConfig(void)
 
         if(mouseadjustment<0) mouseadjustment=0;
         else if(mouseadjustment>9) mouseadjustment=9;
+
+        if(circlepadadjustment<0) circlepadadjustment=0;
+        else if(circlepadadjustment>9) circlepadadjustment=9;
 
         if(viewsize<4) viewsize=4;
         else if(viewsize>21) viewsize=21;
@@ -239,6 +245,7 @@ noconfig:
 
         viewsize = 19;                          // start with a good size
         mouseadjustment=5;
+        circlepadadjustment=5;
     }
 
     SD_SetMusicMode (sm);
@@ -294,6 +301,7 @@ void WriteConfig(void)
 
         write(file,&viewsize,sizeof(viewsize));
         write(file,&mouseadjustment,sizeof(mouseadjustment));
+        write(file,&circlepadadjustment,sizeof(circlepadadjustment));
 
         close(file);
     }
