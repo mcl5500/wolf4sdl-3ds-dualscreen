@@ -521,38 +521,41 @@ void PollControls (void)
 
     circlePosition cpos;
     hidCircleRead(&cpos);
-    if (abs(cpos.dx) > 24)
+    int pad_speed = 40 + circlepadadjustment * 8;
+    if (buttonstate[bt_run])
+        pad_speed = (pad_speed * 6) / 5;
+
+    if (abs(cpos.dx) > 16)
     {
-        int mag_x = abs(cpos.dx) - 24;
-        if (mag_x > 126) mag_x = 126;
+        int mag_x = abs(cpos.dx) - 16;
+        if (mag_x > 128) mag_x = 128;
         int sign_x = (cpos.dx > 0) ? 1 : -1;
-        int base_strafe = buttonstate[bt_run] ? RUNMOVE : BASEMOVE;
-        int max_strafe = (base_strafe * (circlepadadjustment + 2)) / 7;
-        controlx += sign_x * (mag_x * max_strafe) / 126;
+        int strafe_val = (mag_x * pad_speed) / 128;
+        controlx += sign_x * strafe_val * tics;
     }
 
-    if (abs(cpos.dy) > 24)
+    if (abs(cpos.dy) > 16)
     {
-        int mag_y = abs(cpos.dy) - 24;
-        if (mag_y > 126) mag_y = 126;
+        int mag_y = abs(cpos.dy) - 16;
+        if (mag_y > 128) mag_y = 128;
         int sign_y = (cpos.dy > 0) ? -1 : 1;
-        int base_move = buttonstate[bt_run] ? RUNMOVE : BASEMOVE;
-        int max_move = (base_move * (circlepadadjustment + 2)) / 7;
-        controly += sign_y * (mag_y * max_move) / 126;
+        int move_val = (mag_y * pad_speed) / 128;
+        controly += sign_y * move_val * tics;
     }
 
     // C-Stick (New 3DS) / Circle Pad Pro looking / turning support
     circlePosition cstick;
     memset(&cstick, 0, sizeof(cstick));
     irrstCstickRead(&cstick);
-    if (abs(cstick.dx) > 16)
+    if (abs(cstick.dx) > 10)
     {
-        int cs_mag = abs(cstick.dx) - 16;
-        if (cs_mag > 100) cs_mag = 100;
+        int cs_mag = abs(cstick.dx) - 10;
+        if (cs_mag > 70) cs_mag = 70;
         int cs_sign = (cstick.dx > 0) ? 1 : -1;
-        int base_look = buttonstate[bt_run] ? 54 : 36;
-        int max_look = (base_look * (mouseadjustment + 2)) / 7;
-        cstickx = cs_sign * (cs_mag * max_look) / 100;
+        int max_look = 40 + mouseadjustment * 18;
+        if (buttonstate[bt_run])
+            max_look = (max_look * 5) / 4;
+        cstickx = cs_sign * ((cs_mag * max_look) / 70) * tics;
     }
 
     //PollKeyboardMove ();
@@ -566,7 +569,7 @@ void PollControls (void)
 //
 // bound movement to a maximum
 //
-    max = 100 * tics;
+    max = 140 * tics;
     min = -max;
     if (controlx > max)
         controlx = max;
